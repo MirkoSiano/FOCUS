@@ -1,3 +1,3 @@
 # FOCUS
 
-FOCUS: Fourier Optics approach to Coherence of Undulator Sources
+FOCUS: Fourier Optics approach to Coherence of Undulator Sources.
