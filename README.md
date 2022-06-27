@@ -1,7 +1,3 @@
-# FOCUS: Fourier Optics approach to Coherence of Undulator Sources
+# FOCUS: Fast Monte CarlO approach to Coherence of Undulator Sources
 
-Page under construction.
-
-Work in progress.
-
-Coming soon.
+Page under construction, updates coming soon.
