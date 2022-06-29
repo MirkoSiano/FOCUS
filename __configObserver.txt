@@ -1,0 +1,8 @@
+MESH_SIZE		200
+PIXEL_SIZE_[um]		10.0
+Z_[m]			33.0
+LAMBDA_OBS_[nm]		-0.1
+PLANE			VER
+REFERENCE_POINT		OBS_POINT
+X0_[um]			0.0
+Y0_[um]			0.0
