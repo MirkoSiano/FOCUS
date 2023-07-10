@@ -13,8 +13,9 @@ int main(int argc, char **argv){
 	// configure focus
 	focus->readConfigFiles();
 
-	// allocate phaseSpace
+	// allocate memory (phase space and coherence 1D)
 	focus->allocatePhaseSpace();
+	focus->allocateCoherence1D();
 
 	// fill phase space
 	focus->fillPhaseSpace();
@@ -31,6 +32,7 @@ int main(int argc, char **argv){
 
 	// free memory
 	focus->freePhaseSpace();
+	focus->freeCoherence1D();
 
 	// closing program
 	delete focus;

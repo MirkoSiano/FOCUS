@@ -18,6 +18,27 @@ class FOCUS{
 
 		/********** PUBLIC METHODS **********/
 
+		// Write main FOCUS parameters
+		void setUndGamma(double);
+		void setUndK(double);
+		void setUndLambdaW(double);
+		void setUndNW(int);
+		void setUndHarm(int);
+		void setUndObsLambda(double);
+		void setDim(int);
+		void setPxl(double);
+		void setZ(double);
+		void setPlane(char *);
+		void setReferencePoint(char *);
+		void setX0(double);
+		void setY0(double);
+		void setSigmaX(double);
+		void setSigmaXP(double);
+		void setSigmaY(double);
+		void setSigmaYP(double);
+		void setEnSpread(double);
+		void setNMC(int);
+
 		// Update parameters
 		void updateUndulatorParameters();
 		void updateObserverParameters();
@@ -30,9 +51,13 @@ class FOCUS{
 		void readConfigFileObserver();
 		void readConfigFiles();
 
-		// Allocate phase space
+		// Manage memory
 		void allocatePhaseSpace();
 		void freePhaseSpace();
+		void allocateCoherence1D();
+		void freeCoherence1D();
+		void allocateCoherence2D();
+		void freeCoherence2D();
 
 		// Fill phase space
 		void getNMCFromFile(char *);
@@ -42,10 +67,12 @@ class FOCUS{
 
 		// Coherence
 		void coherence1D();
+		void coherence2D();
 
 		// Saving
 		void saveParameters();
 		void saveCoherence1D();
+		void saveCoherence2D();
 
 	private:
 		/********** PRIVATE ATTRIBUTES **********/
@@ -67,7 +94,7 @@ class FOCUS{
 		int dim;
 		double pxl; // [um]
 		double z; // [m]
-		char plane[10];
+		char plane[4];
 		char reference_point[10];
 		double x0; // [um]
 		double y0; // [um]
@@ -110,13 +137,20 @@ class FOCUS{
 		double *phaseSpaceY;
 		double *phaseSpaceYP;
 		double *phaseSpaceE;
-		double *coherenceProfile;
-		double *coordinatesProfile;
+
 		double *devPhaseSpaceX;
 		double *devPhaseSpaceXP;
 		double *devPhaseSpaceY;
 		double *devPhaseSpaceYP;
 		double *devPhaseSpaceE;
+
+		double *coherenceProfile;
+		double *coordinatesProfile;
+
+		//double **coherence2DMap;
+		double *coherence2DMap;
+		double **coordinatesX2D;
+		double **coordinatesY2D;
 
 		// Seeds for random number generators
 		unsigned int seed1;

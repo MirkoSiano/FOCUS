@@ -1,6 +1,108 @@
 #include "FOCUS_Class.cuh"
 #include "FOCUS_Kernel.cuh"
 
+/************************************************************/
+/********** METHODS TO WRITE MAIN FOCUS PARAMETERS **********/
+/************************************************************/
+
+void FOCUS::setUndGamma(double value){
+	undGamma = value;
+}
+
+void FOCUS::setUndK(double value){
+	undK = value;
+}
+
+void FOCUS::setUndLambdaW(double value){
+	undLambdaW = value;
+}
+
+void FOCUS::setUndNW(int value){
+	undNW = value;
+}
+
+void FOCUS::setUndHarm(int value){
+	undHarm = value;
+}
+
+void FOCUS::setUndObsLambda(double value){
+	undObsLambda = value;
+}
+
+void FOCUS::setDim(int value){
+	dim = value;
+}
+
+void FOCUS::setPxl(double value){
+	pxl = value;
+}
+
+void FOCUS::setZ(double value){
+	z = value;
+}
+
+void FOCUS::setPlane(char * value){
+	strcpy(plane,value);
+
+	// check plane
+	if(strcmp(plane,"HOR")!=0){
+		if(strcmp(plane,"VER")!=0){
+			if(strcmp(plane,"2D")!=0){
+				cout << " Invalid variable PLANE" << endl;
+				exit(1);
+			}
+		}
+	}
+}
+
+void FOCUS::setReferencePoint(char * value){
+	strcpy(reference_point,value);
+
+	// check reference point
+	if(strcmp(reference_point,"MID_POINT")!=0){
+		if(strcmp(reference_point,"OBS_POINT")!=0){
+			cout << " Invalid variable REFERENCE POINT" << endl;
+			exit(1);
+		}
+	}
+}
+
+void FOCUS::setX0(double value){
+	x0 = value;
+}
+
+void FOCUS::setY0(double value){
+	y0 = value;
+}
+
+void FOCUS::setSigmaX(double value){
+	sigmaX = value;
+}
+
+void FOCUS::setSigmaXP(double value){
+	sigmaXP = value;
+}
+
+void FOCUS::setSigmaY(double value){
+	sigmaY = value;
+}
+
+void FOCUS::setSigmaYP(double value){
+	sigmaYP = value;
+}
+
+void FOCUS::setEnSpread(double value){
+	enSpread = value;
+}
+
+void FOCUS::setNMC(int value){
+	NMC = value;
+}
+
+/***************************************/
+/********** CLASS CONSTRUCTOR **********/
+/***************************************/
+
 FOCUS::FOCUS(){
 	cout << " Initializing FOCUS ... ";
 
@@ -41,9 +143,17 @@ FOCUS::FOCUS(){
 	cout << "done" << endl;
 }
 
+/**************************************/
+/********** CLASS DESTRUCTOR **********/
+/**************************************/
+
 FOCUS::~FOCUS(){
 	cout << "\n FOCUS successfully completed!" << endl;
 }
+
+/**************************************************************************************/
+/********** METHODS TO COMPUTE UNDULATOR AND RADIATION (INTERNAL) PARAMETERS **********/
+/**************************************************************************************/
 
 void FOCUS::computeUndulatorLength(){
 	undLW = double(undNW)*undLambdaW/1000.0;
@@ -73,6 +183,22 @@ void FOCUS::computeResonantPhotonEnergy(){
 	undResPhotonEnergy = undFundamentalPhotonEnergy*double(undHarm);
 }
 
+void FOCUS::computeObservedFrequency(){
+	undObsOmega = 2.0*pi*c*1000000000.0/undObsLambda;
+}
+
+void FOCUS::computeObservedPhotonEnergy(){
+	undObsPhotonEnergy = hbar*undObsOmega*1000.0;
+}
+
+void FOCUS::computeDetuning(){
+	undC = (undObsOmega-undResOmega)/undResOmega;
+}
+
+/**************************************************/
+/********** METHODS TO UPDATE PARAMETERS **********/
+/**************************************************/
+
 void FOCUS::updateUndulatorParameters(){
 	// check odd harmonic
 	if(undHarm%2==0){
@@ -86,18 +212,6 @@ void FOCUS::updateUndulatorParameters(){
 	computeResonantWavelength();
 	computeResonantFrequency();
 	computeResonantPhotonEnergy();
-}
-
-void FOCUS::computeObservedFrequency(){
-	undObsOmega = 2.0*pi*c*1000000000.0/undObsLambda;
-}
-
-void FOCUS::computeObservedPhotonEnergy(){
-	undObsPhotonEnergy = hbar*undObsOmega*1000.0;
-}
-
-void FOCUS::computeDetuning(){
-	undC = (undObsOmega-undResOmega)/undResOmega;
 }
 
 void FOCUS::updateObserverParameters(){
@@ -130,6 +244,10 @@ void FOCUS::updateParameters(){
 	updateObserverParameters();
 	updateReducedParameters();
 }
+
+/*********************************************************/
+/********** METHODS TO READ CONFIGURATION FILES **********/
+/*********************************************************/
 
 void FOCUS::readConfigFileUndulator(){
 	char fileName[50] = "__configUndulator.txt";
@@ -197,15 +315,17 @@ void FOCUS::readConfigFileObserver(){
 	// check plane
 	if(strcmp(plane,"HOR")!=0){
 		if(strcmp(plane,"VER")!=0){
-			cout << " Invalid variable PLANE" << endl;
-			exit(1);
+			if(strcmp(plane,"2D")!=0){
+				cout << " Invalid variable PLANE" << endl;
+				exit(1);
+			}
 		}
 	}
 
 	// check reference point
 	if(strcmp(reference_point,"MID_POINT")!=0){
 		if(strcmp(reference_point,"OBS_POINT")!=0){
-			cout << " Invalid variable PLANE" << endl;
+			cout << " Invalid variable REFERENCE POINT" << endl;
 			exit(1);
 		}
 	}
@@ -222,8 +342,12 @@ void FOCUS::readConfigFiles(){
 	cout << "done" << endl;
 }
 
+/****************************************************************************/
+/********** METHODS TO MANAGE THE ELECTRON BEAM PHASE SPACE MEMORY **********/
+/****************************************************************************/
+
 void FOCUS::allocatePhaseSpace(){
-	cout << " Allocating memory ... ";
+	cout << " Allocating phase space memory ... ";
 
 	phaseSpaceX = new double[NMC];
 	phaseSpaceXP = new double[NMC];
@@ -236,14 +360,11 @@ void FOCUS::allocatePhaseSpace(){
 	cudaMalloc(&devPhaseSpaceYP,NMC*sizeof(double));
 	cudaMalloc(&devPhaseSpaceE,NMC*sizeof(double));
 
-	coherenceProfile = new double[dim];
-	coordinatesProfile = new double[dim];
-
 	cout << "done" << endl;
 }
 
 void FOCUS::freePhaseSpace(){
-	cout << " Freeing allocated memory ... ";
+	cout << " Freeing allocated phase space memory ... ";
 
 	delete [] phaseSpaceX;
 	delete [] phaseSpaceXP;
@@ -256,11 +377,79 @@ void FOCUS::freePhaseSpace(){
 	cudaFree(devPhaseSpaceYP);
 	cudaFree(devPhaseSpaceE);
 
+	cout << "done" << endl;
+}
+
+void FOCUS::copyPhaseSpaceFromHostToDevice(){
+	cout << " Moving phase space from CPU to GPU ... ";
+
+	cudaMemcpy(devPhaseSpaceX,phaseSpaceX,NMC*sizeof(double),cudaMemcpyHostToDevice);
+	cudaMemcpy(devPhaseSpaceXP,phaseSpaceXP,NMC*sizeof(double),cudaMemcpyHostToDevice);
+	cudaMemcpy(devPhaseSpaceY,phaseSpaceY,NMC*sizeof(double),cudaMemcpyHostToDevice);
+	cudaMemcpy(devPhaseSpaceYP,phaseSpaceYP,NMC*sizeof(double),cudaMemcpyHostToDevice);
+	cudaMemcpy(devPhaseSpaceE,phaseSpaceE,NMC*sizeof(double),cudaMemcpyHostToDevice);
+
+	cout << "done" << endl;
+}
+
+/********************************************************/
+/********** METHODS TO MANAGE COHERENCE MEMORY **********/
+/********************************************************/
+
+void FOCUS::allocateCoherence1D(){
+	cout << " Allocating coherence 1D memory ... ";
+
+	coherenceProfile = new double[dim];
+	coordinatesProfile = new double[dim];
+
+	cout << "done" << endl;
+}
+
+void FOCUS::freeCoherence1D(){
+	cout << " Freeing allocated coherence 1D memory ... ";
+
 	delete [] coherenceProfile;
 	delete [] coordinatesProfile;
 
 	cout << "done" << endl;
 }
+
+void FOCUS::allocateCoherence2D(){
+	cout << " Allocating coherence 2D memory ... ";
+
+	//coherence2DMap = new double *[dim];
+	coherence2DMap = new double[dim*dim];
+	coordinatesX2D = new double *[dim];
+	coordinatesY2D = new double *[dim];
+
+	for(int i=0;i<dim;i++){
+		//coherence2DMap[i] = new double[dim];
+		coordinatesX2D[i] = new double[dim];
+		coordinatesY2D[i] = new double[dim];
+	}
+
+	cout << "done" << endl;
+}
+
+void FOCUS::freeCoherence2D(){
+	cout << " Freeing allocated coherence 2D memory ... ";
+
+	for(int i=0;i<dim;i++){
+		//delete [] coherence2DMap[i];
+		delete [] coordinatesX2D[i];
+		delete [] coordinatesY2D[i];
+	}
+
+	delete [] coherence2DMap;
+	delete [] coordinatesX2D;
+	delete [] coordinatesY2D;
+
+	cout << "done" << endl;
+}
+
+/**********************************************************/
+/********** METHODS FOR RANDOM NUMBER GENERATORS **********/
+/**********************************************************/
 
 double FOCUS::randomNumber(unsigned int *seed){
 	const unsigned int m = (int)pow(2.,32);
@@ -283,6 +472,10 @@ double FOCUS::boxMuller(unsigned int *s1, unsigned int *s2, double mean, double 
 	double u2 = randomNumber(s2);
 	return stdev*(sqrt(-2.*log(u1))*cos(2.*pi*u2))+mean;
 }
+
+/***********************************************************************/
+/********** METHODS TO POPULATE THE ELECTRON BEAM PHASE SPACE **********/
+/***********************************************************************/
 
 void FOCUS::getNMCFromFile(char *fileName){
 	ifstream phaseSpaceFile;
@@ -351,19 +544,16 @@ void FOCUS::fillPhaseSpaceFromFile(char *fileName){
 	cout << "done" << endl;
 }
 
-void FOCUS::copyPhaseSpaceFromHostToDevice(){
-	cout << " Moving from CPU to GPU ... ";
-
-	cudaMemcpy(devPhaseSpaceX,phaseSpaceX,NMC*sizeof(double),cudaMemcpyHostToDevice);
-	cudaMemcpy(devPhaseSpaceXP,phaseSpaceXP,NMC*sizeof(double),cudaMemcpyHostToDevice);
-	cudaMemcpy(devPhaseSpaceY,phaseSpaceY,NMC*sizeof(double),cudaMemcpyHostToDevice);
-	cudaMemcpy(devPhaseSpaceYP,phaseSpaceYP,NMC*sizeof(double),cudaMemcpyHostToDevice);
-	cudaMemcpy(devPhaseSpaceE,phaseSpaceE,NMC*sizeof(double),cudaMemcpyHostToDevice);
-
-	cout << "done" << endl;
-}
+/**************************************************/
+/********** COMPUTE COHERENCE 1D PROFILE **********/
+/**************************************************/
 
 void FOCUS::coherence1D(){
+	 if(strcmp(plane,"2D")==0){
+		cout << " Invalid variable PLANE for function coherence1D";
+		exit(1);
+	}
+
 	cout << " Computing 1D coherence on GPU ... ";
 
 	// Kernel configuration parameters
@@ -528,6 +718,210 @@ void FOCUS::coherence1D(){
 	cout << "done" << endl;
 }
 
+/**********************************************/
+/********** COMPUTE COHERENCE 2D MAP **********/
+/**********************************************/
+
+void FOCUS::coherence2D(){
+	cout << " Computing 2D coherence on GPU ... ";
+
+	// Kernel configuration parameters
+	int maxThreadsPerBlock = 1024;
+	int numThreads = 256;
+	int numBlocks = (NMC+numThreads-1)/numThreads;
+
+	// Parameters on CPU
+	int center = dim/2;
+	double convertFromCoordinateToTheta = pxl/(z*undScalingAngular);
+	double thetax0 = x0/(z*undScalingAngular);
+	double thetay0 = y0/(z*undScalingAngular);
+	double commonParam[5];
+	double **deltaThetaX;
+	double **deltaThetaY;
+	double **arrayThetaX1;
+	double **arrayThetaX2;
+	double **arrayThetaY1;
+	double **arrayThetaY2;
+	double theta1[2];
+	double theta2[2];
+
+	// Parameters on GPU
+	double *devCommonParam;
+	double *devTheta1;
+	double *devTheta2;
+	double *devCoherence;
+	double *devRe1;
+	double *devIm1;
+	double *devRe2;
+	double *devIm2;
+	double *devReCSD;
+	double *devImCSD;
+	double *devI1;
+	double *devI2;
+
+	// Setting commonParam
+	commonParam[0] = undHatZ;
+	commonParam[1] = undHatZ/2.0;
+	commonParam[2] = undHatC/2.0;
+	commonParam[3] = undHatZ*undHatZ/(2.0*undHatZ-1.0);
+	commonParam[4] = undHatZ*undHatZ/(2.0*undHatZ+1.0);
+
+	// Allocate memory
+	deltaThetaX = new double *[dim];
+	deltaThetaY = new double *[dim];
+	arrayThetaX1 = new double *[dim];
+	arrayThetaX2 = new double *[dim];
+	arrayThetaY1 = new double *[dim];
+	arrayThetaY2 = new double *[dim];
+	for(int i=0;i<dim;i++){
+		deltaThetaX[i] = new double[dim];
+		deltaThetaY[i] = new double[dim];
+		arrayThetaX1[i] = new double[dim];
+		arrayThetaX2[i] = new double[dim];
+		arrayThetaY1[i] = new double[dim];
+		arrayThetaY2[i] = new double[dim];
+	}
+	
+	cudaMalloc(&devCommonParam,5*sizeof(double));
+	cudaMalloc(&devTheta1,2*sizeof(double));
+	cudaMalloc(&devTheta2,2*sizeof(double));
+	cudaMalloc(&devCoherence,dim*dim*sizeof(double));
+	cudaMalloc(&devRe1,NMC*sizeof(double));
+	cudaMalloc(&devIm1,NMC*sizeof(double));
+	cudaMalloc(&devRe2,NMC*sizeof(double));
+	cudaMalloc(&devIm2,NMC*sizeof(double));
+	cudaMalloc(&devReCSD,1*sizeof(double));
+	cudaMalloc(&devImCSD,1*sizeof(double));
+	cudaMalloc(&devI1,1*sizeof(double));
+	cudaMalloc(&devI2,1*sizeof(double));
+
+	// Copy commonParam from Host to Device
+	cudaMemcpy(devCommonParam,&commonParam,5*sizeof(double),cudaMemcpyHostToDevice);
+
+	// Compute values for deltaTheta and store results
+	for(int i=0;i<dim;i++){
+		for(int j=0;j<dim;j++){
+			deltaThetaX[i][j] = double(i-center)*convertFromCoordinateToTheta;
+			deltaThetaY[i][j] = double(j-center)*convertFromCoordinateToTheta;
+			coordinatesX2D[i][j] = double(i-center)*pxl;
+			coordinatesY2D[i][j] = double(j-center)*pxl;
+		}
+	}
+
+	// Compute theta1 and theta2 for different modes
+	if(strcmp(plane,"HOR")==0){
+		for(int i=0;i<dim;i++){
+			for(int j=0;j<dim;j++){
+				arrayThetaX1[i][j] = deltaThetaX[i][j];
+				arrayThetaX2[i][j] = deltaThetaY[i][j];
+				arrayThetaY1[i][j] = thetax0;
+				arrayThetaY2[i][j] = thetay0;
+			}
+		}
+	} else if(strcmp(plane,"VER")==0){
+		for(int i=0;i<dim;i++){
+			for(int j=0;j<dim;j++){
+				arrayThetaX1[i][j] = thetax0;
+				arrayThetaX2[i][j] = thetay0;
+				arrayThetaY1[i][j] = deltaThetaX[i][j];
+				arrayThetaY2[i][j] = deltaThetaY[i][j];
+			}
+		}
+	} else{
+		if(strcmp(reference_point,"MID_POINT")==0){
+			for(int i=0;i<dim;i++){
+				for(int j=0;j<dim;j++){
+					arrayThetaX1[i][j] = thetax0-deltaThetaX[i][j]/2.0;
+					arrayThetaX2[i][j] = thetax0+deltaThetaX[i][j]/2.0;
+					arrayThetaY1[i][j] = thetay0-deltaThetaY[i][j]/2.0;
+					arrayThetaY2[i][j] = thetay0+deltaThetaY[i][j]/2.0;
+				}
+			}
+		} else if(strcmp(reference_point,"OBS_POINT")==0){
+			for(int i=0;i<dim;i++){
+				for(int j=0;j<dim;j++){
+					arrayThetaX1[i][j] = thetax0;
+					arrayThetaX2[i][j] = thetax0+deltaThetaX[i][j];
+					arrayThetaY1[i][j] = thetay0;
+					arrayThetaY2[i][j] = thetay0+deltaThetaY[i][j];
+				}
+			}
+		}
+	}
+
+	// Cycle through observation points
+	for(int i=0;i<dim;i++){
+		for(int j=0;j<dim;j++){
+
+			// Set theta1 and theta2
+			theta1[0] = arrayThetaX1[i][j];
+			theta1[1] = arrayThetaY1[i][j];
+			theta2[0] = arrayThetaX2[i][j];
+			theta2[1] = arrayThetaY2[i][j];
+
+			// Copy theta1 and theta2 from CPU to GPU
+			cudaMemcpy(devTheta1,theta1,2*sizeof(double),cudaMemcpyHostToDevice);
+			cudaMemcpy(devTheta2,theta2,2*sizeof(double),cudaMemcpyHostToDevice);
+
+			// Compute electric fields at observation points
+			computeElectricField_FarField<<<numBlocks,numThreads>>>(devTheta1,devRe1,devIm1,devCommonParam,devPhaseSpaceX,devPhaseSpaceXP,devPhaseSpaceY,devPhaseSpaceYP,devPhaseSpaceE,NMC);
+			computeElectricField_FarField<<<numBlocks,numThreads>>>(devTheta2,devRe2,devIm2,devCommonParam,devPhaseSpaceX,devPhaseSpaceXP,devPhaseSpaceY,devPhaseSpaceYP,devPhaseSpaceE,NMC);
+			cudaDeviceSynchronize();
+
+			// Compute individual terms for CSD, I1 and I2
+			computeSpectralDegreeOfCoherence<<<numBlocks,numThreads>>>(devRe1,devIm1,devRe2,devIm2,NMC);
+			cudaDeviceSynchronize();
+
+			// Add array elements
+			computeSum<<<1,maxThreadsPerBlock>>>(devRe1,devReCSD,NMC);
+			computeSum<<<1,maxThreadsPerBlock>>>(devIm1,devImCSD,NMC);
+			computeSum<<<1,maxThreadsPerBlock>>>(devRe2,devI1,NMC);
+			computeSum<<<1,maxThreadsPerBlock>>>(devIm2,devI2,NMC);
+			cudaDeviceSynchronize();
+
+			// Compute |SDC|
+			computeModulusSDC<<<1,1>>>(&(devCoherence[i*dim+j]),devReCSD,devImCSD,devI1,devI2);
+		}
+	}
+
+	// Copy results from GPU to CPU
+	cudaMemcpy(coherence2DMap,devCoherence,dim*dim*sizeof(double),cudaMemcpyDeviceToHost);
+
+	// Free memory
+	for(int i=0;i<dim;i++){
+		delete [] deltaThetaX[i];
+		delete [] deltaThetaY[i];
+		delete [] arrayThetaX1[i];
+		delete [] arrayThetaX2[i];
+		delete [] arrayThetaY1[i];
+		delete [] arrayThetaY2[i];
+	}
+	delete [] deltaThetaX;
+	delete [] deltaThetaY;
+	delete [] arrayThetaX1;
+	delete [] arrayThetaX2;
+	delete [] arrayThetaY1;
+	delete [] arrayThetaY2;
+	cudaFree(devCommonParam);
+	cudaFree(devTheta1);
+	cudaFree(devTheta2);
+	cudaFree(devCoherence);
+	cudaFree(devRe1);
+	cudaFree(devIm1);
+	cudaFree(devRe2);
+	cudaFree(devIm2);
+	cudaFree(devReCSD);
+	cudaFree(devImCSD);
+	cudaFree(devI1);
+	cudaFree(devI2);
+
+	cout << "done" << endl;
+}
+
+/*********************************************/
+/********** METHODS TO SAVE RESULTS **********/
+/*********************************************/
+
 void FOCUS::saveParameters(){
 	cout << " Saving parameters ... ";
 
@@ -606,6 +1000,30 @@ void FOCUS::saveCoherence1D(){
 
 	for(int i=0;i<dim;i++){
 		outputFile << coordinatesProfile[i] << "\t" << coherenceProfile[i] << endl;
+	}
+	
+	outputFile.close();
+
+	cout << "done" << endl;
+}
+
+void FOCUS::saveCoherence2D(){
+	cout << " Saving 2D coherence ... ";
+
+	char fileName[50] = "outputCoherence2D.txt";
+	ofstream outputFile;
+
+	outputFile.open(fileName);
+
+	if(!outputFile.is_open()){
+		cout << " Unable to open " << fileName << endl;
+		exit(1);
+	}
+
+	for(int i=0;i<dim;i++){
+		for(int j=0;j<dim;j++){
+			outputFile << coordinatesX2D[i][j] << "\t" << coordinatesY2D[i][j] << "\t" << coherence2DMap[i*dim+j] << endl;
+		}
 	}
 	
 	outputFile.close();

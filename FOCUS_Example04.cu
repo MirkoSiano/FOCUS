@@ -20,12 +20,10 @@ int main(int argc, char **argv){
 	// configure focus
 	focus->readConfigFiles();
 
-	// get NMC from file
+	// allocate memory (phase space and coherence 2D)
 	focus->getNMCFromFile(argv[1]);
-
-	// allocate memory (phase space and coherence 1D)
 	focus->allocatePhaseSpace();
-	focus->allocateCoherence1D();
+	focus->allocateCoherence2D();
 
 	// fill phase space
 	focus->fillPhaseSpaceFromFile(argv[1]);
@@ -33,16 +31,16 @@ int main(int argc, char **argv){
 	// copy phase space on GPU memory
 	focus->copyPhaseSpaceFromHostToDevice();
 
-	// compute 1D coherence profile
-	focus->coherence1D();
+	// compute 2D coherence map
+	focus->coherence2D();
 
 	// save
-	focus->saveCoherence1D();
+	focus->saveCoherence2D();
 	focus->saveParameters();
 
 	// free memory
 	focus->freePhaseSpace();
-	focus->freeCoherence1D();
+	focus->freeCoherence2D();
 
 	// closing program
 	delete focus;
