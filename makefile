@@ -16,6 +16,9 @@ FOCUS_Example03.obj: FOCUS_Example03.cu
 FOCUS_Example04.obj: FOCUS_Example04.cu
 	nvcc -dc -arch=sm_50 FOCUS_Example04.cu -o FOCUS_Example04.obj
 
+FOCUS_Example05.obj: FOCUS_Example05.cu
+	nvcc -dc -arch=sm_50 FOCUS_Example05.cu -o FOCUS_Example05.obj
+
 compileExample01: FOCUS_Kernel.obj FOCUS_Class.obj FOCUS_Example01.obj
 	nvcc FOCUS_Kernel.obj FOCUS_Class.obj FOCUS_Example01.obj -o FOCUS_Example01.exe
 
@@ -28,11 +31,15 @@ compileExample03: FOCUS_Kernel.obj FOCUS_Class.obj FOCUS_Example03.obj
 compileExample04: FOCUS_Kernel.obj FOCUS_Class.obj FOCUS_Example04.obj
 	nvcc FOCUS_Kernel.obj FOCUS_Class.obj FOCUS_Example04.obj -o FOCUS_Example04.exe
 
+compileExample05: FOCUS_Kernel.obj FOCUS_Class.obj FOCUS_Example05.obj
+	nvcc FOCUS_Kernel.obj FOCUS_Class.obj FOCUS_Example05.obj -o FOCUS_Example05.exe
+
 all:
 	make compileExample01
 	make compileExample02
 	make compileExample03
 	make compileExample04
+	make compileExample05
 
 clean:
 	del *.obj *.exe *.exp *.lib

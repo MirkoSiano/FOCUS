@@ -99,6 +99,74 @@ void FOCUS::setNMC(int value){
 	NMC = value;
 }
 
+/****************************************************/
+/********** READ MAIN UNDULATOR PARAMETERS **********/
+/****************************************************/
+// ...
+// write methods here
+// ...
+
+/*******************************************************/
+/********** READ OBSERVATION PLANE PARAMETERS **********/
+/*******************************************************/
+// ...
+double FOCUS::getZ(){
+	return z;
+}
+
+double FOCUS::getPxl(){
+	return pxl;
+}
+// ...
+
+/***************************************************/
+/********** READ ELECTRON BEAM PARAMETERS **********/
+/***************************************************/
+// ...
+double FOCUS::getSigmaX(){
+	return sigmaX;
+}
+
+double FOCUS::getSigmaY(){
+	return sigmaY;
+}
+// ...
+
+/******************************************/
+/********** READ UNDULATOR UTILS **********/
+/******************************************/
+// ...
+double FOCUS::getUndLW(){
+	return undLW;
+};
+// ...
+
+/***********************************************/
+/********** READ COHERENCE PARAMETERS **********/
+/***********************************************/
+// ...
+double FOCUS::getCohLength(){
+	return cohLength;
+};
+// ...
+
+/*********************************************/
+/********** READ REDUCED PARAMETERS **********/
+/*********************************************/
+// ...
+double FOCUS::getUndHatZ(){
+	return undHatZ;
+}
+
+double FOCUS::getUndHatNX(){
+	return undHatNX;
+}
+
+double FOCUS::getUndHatDX(){
+	return undHatDX;
+}
+// ...
+
 /***************************************/
 /********** CLASS CONSTRUCTOR **********/
 /***************************************/
@@ -524,11 +592,13 @@ void FOCUS::fillPhaseSpaceFromFile(char *fileName){
 		exit(1);
 	}
 	for(int i=0;i<NMC;i++){
-		phaseSpaceFile >> phaseSpaceX[i];
-		phaseSpaceFile >> phaseSpaceXP[i];
-		phaseSpaceFile >> phaseSpaceY[i];
-		phaseSpaceFile >> phaseSpaceYP[i];
-		phaseSpaceFile >> phaseSpaceE[i];
+		//phaseSpaceFile >> phaseSpaceX[i];
+		//phaseSpaceFile >> phaseSpaceXP[i];
+		//phaseSpaceFile >> phaseSpaceY[i];
+		//phaseSpaceFile >> phaseSpaceYP[i];
+		//phaseSpaceFile >> phaseSpaceE[i];
+
+		phaseSpaceFile >> phaseSpaceX[i] >> phaseSpaceXP[i] >> phaseSpaceY[i] >> phaseSpaceYP[i] >> phaseSpaceE[i];
 	}
 	
 	phaseSpaceFile.close();
@@ -918,6 +988,32 @@ void FOCUS::coherence2D(){
 	cout << "done" << endl;
 }
 
+/*********************************************************/
+/********** COMPUTE TRANSVERSE COHERENCE LENGTH **********/
+/*********************************************************/
+
+void FOCUS::coherenceLength(){
+	cout << " Computing transverse coherence length ... ";
+
+	double sum = 0.;
+	double temp;
+
+	for(int i=0;i<dim;i++){
+		temp = coherenceProfile[i]*coherenceProfile[i]/3;
+		if(i!=0 && i!=(dim-1)){
+			if(i%2==0){
+				temp *= 2.;
+			} else{
+				temp *= 4.;
+			}
+		}
+		sum += temp;
+	}
+	cohLength = sum*pxl;
+
+	cout << "done" << endl;
+}
+
 /*********************************************/
 /********** METHODS TO SAVE RESULTS **********/
 /*********************************************/
@@ -985,10 +1081,93 @@ void FOCUS::saveParameters(){
 	cout << "done" << endl;
 }
 
+void FOCUS::saveParameters(string fileName){
+	cout << " Saving parameters ... ";
+
+	ofstream outputFile;
+
+	outputFile.open(fileName);
+
+	if(!outputFile.is_open()){
+		cout << " Unable to open " << fileName << endl;
+		exit(1);
+	}
+
+	outputFile << "/********** UNDULATOR PARAMETERS (INPUT) **********/" << endl;
+	outputFile << " GAMMA: " << undGamma << endl;
+	outputFile << " K: " << undK << endl;
+	outputFile << " PERIOD_NUM: " << undNW << endl;
+	outputFile << " PERIOD_LEN_[mm]: " << undLambdaW << endl;
+	outputFile << " HARMONIC:" << undHarm << endl;
+	outputFile << endl;
+	outputFile << "/********** ELECTRON BEAM PARAMETERS (INPUT) **********/" << endl;
+	outputFile << " SIGMAX_[um]: " << sigmaX << endl;
+	outputFile << " SIGMAXP_[urad]: " << sigmaXP << endl;
+	outputFile << " SIGMAY_[um]: " << sigmaY << endl;
+	outputFile << " SIGMAYP_[um]: " << sigmaYP << endl;
+	outputFile << " ENERGY_SPREAD: " << enSpread << endl;
+	outputFile << " NMC: " << NMC << endl;
+	outputFile << endl;
+	outputFile << "/********** OBSERVER PARAMETERS (INPUT) **********/" << endl;
+	outputFile << " MESH_SIZE: " << dim << endl;
+	outputFile << " PIXEL_SIZE_[um]: " << pxl << endl;
+	outputFile << " Z_[m]: " << z << endl;
+	outputFile << " LAMBDA_OBS_[nm]: " << undObsLambda << endl;
+	outputFile << " PLANE: " << plane << endl;
+	outputFile << " REFERENCE_POINT: " << reference_point << endl;
+	outputFile << " X0: " << x0 << endl;
+	outputFile << " Y0: " << y0 << endl;
+	outputFile << endl;
+	outputFile << "/********** UNDULATOR PARAMETERS (DERIVED) **********/" << endl;
+	outputFile << " UNDULATOR_LENGTH_[m]: " << undLW << endl;
+	outputFile << " 1st_HARMONIC_LAMBDA[nm]: " << undFundamentalLambda << endl;
+	outputFile << " 1st_HARMONIC_PHOTON_ENERGY_[keV]: " << undFundamentalPhotonEnergy << endl;
+	outputFile << " RESONANT_LAMBDA_[nm]: " << undResLambda << endl;
+	outputFile << " RESONANT_PHOTON_ENERGY_[keV]: " << undResPhotonEnergy << endl;
+	outputFile << " OBSERVED_PHOTON_ENERGY_[keV]: " << undObsPhotonEnergy << endl;
+	outputFile << " DETUNING: " << undC << endl;
+	outputFile << endl;
+	outputFile << "/********** REDUCED PARAMETERS **********/" << endl;
+	outputFile << " SCALING_TRANSVERSE_[um]: " << undScalingTransverse << endl;
+	outputFile << " SCALING_ANGULAR_[urad]: " << undScalingAngular << endl;
+	outputFile << " HAT_Z: " << undHatZ << endl;
+	outputFile << " HAT_C: " << undHatC << endl;
+	outputFile << " HAT_N_X: " << undHatNX << endl;
+	outputFile << " HAT_D_X: " << undHatDX << endl;
+	outputFile << " HAT_N_Y: " << undHatNY << endl;
+	outputFile << " HAT_D_Y: " << undHatDY << endl;
+	outputFile << " HAT_ENERGY_SPREAD: " << undHatEnergySpread << endl;
+	
+	outputFile.close();
+
+	cout << "done" << endl;
+}
+
 void FOCUS::saveCoherence1D(){
 	cout << " Saving 1D coherence ... ";
 
 	char fileName[50] = "outputCoherence1D.txt";
+	ofstream outputFile;
+
+	outputFile.open(fileName);
+
+	if(!outputFile.is_open()){
+		cout << " Unable to open " << fileName << endl;
+		exit(1);
+	}
+
+	for(int i=0;i<dim;i++){
+		outputFile << coordinatesProfile[i] << "\t" << coherenceProfile[i] << endl;
+	}
+	
+	outputFile.close();
+
+	cout << "done" << endl;
+}
+
+void FOCUS::saveCoherence1D(string fileName){
+	cout << " Saving 1D coherence ... ";
+
 	ofstream outputFile;
 
 	outputFile.open(fileName);

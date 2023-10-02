@@ -1,7 +1,7 @@
 #include <iostream>
 #include <math.h>
 #include <fstream>
-#include <string.h>
+#include <string>
 
 using namespace std;
 
@@ -39,6 +39,40 @@ class FOCUS{
 		void setEnSpread(double);
 		void setNMC(int);
 
+		// Read undulator main parameters
+		// ...
+		double getSigmaX();
+		double getSigmaY();
+		// ...
+
+		// Read observation plane parameters
+		// ...
+		double getPxl();
+		double getZ();
+		// ...
+
+		// Read electron beam parameters
+		// ...
+		// write methods here
+		// ...
+
+		// Read undulator utils
+		// ...
+		double getUndLW();
+		// ...
+
+		// Read coherence parameters
+		// ...
+		double getCohLength();
+		// ...
+
+		// Read reduced parameters
+		// ...
+		double getUndHatZ();
+		double getUndHatNX();
+		double getUndHatDX();
+		// ...
+
 		// Update parameters
 		void updateUndulatorParameters();
 		void updateObserverParameters();
@@ -68,10 +102,13 @@ class FOCUS{
 		// Coherence
 		void coherence1D();
 		void coherence2D();
+		void coherenceLength();
 
 		// Saving
 		void saveParameters();
+		void saveParameters(string);
 		void saveCoherence1D();
+		void saveCoherence1D(string);
 		void saveCoherence2D();
 
 	private:
@@ -151,6 +188,8 @@ class FOCUS{
 		double *coherence2DMap;
 		double **coordinatesX2D;
 		double **coordinatesY2D;
+
+		double cohLength;
 
 		// Seeds for random number generators
 		unsigned int seed1;
